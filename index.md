@@ -2,7 +2,7 @@
 
 ```{abstract}
 Rubin's Data Management strategy has been to build its difference-imaging templates from previous visits.
-As a consequence, early in the survey many images cannot be differenced for lack of templates,
+As a consequence, early in the survey many images cannot be differenced due to lack of templates,
 and how long that lasts depends on two things: how quickly the survey accumulates visits (set by the observing
 strategy), and how quickly those visits can be combined and deployed as templates in Alert Production (set by Data
 Management's template strategy). This note quantifies the gap and the value of sourcing external $griz$ DECam
@@ -15,8 +15,9 @@ $N = 4$–10, completeness with DECam stays within 0.71–0.81, whereas without 
 down to 0.21. Applying DM's DP2 template-visit selection (a 1.4″ PSF ceiling and a transparency
 cut) lowers Rubin-only completeness by 0.03–0.10 but changes it by at most 0.03 with DECam. The one
 practical DM-side choice that matters is when a tract switches from DECam to Rubin templates: switching as soon
-as any Rubin template exists in a tract removes most of the DECam gain, while waiting for full Rubin
-coverage keeps most of the gain in place. DECam
+as any Rubin template exists in a tract removes most of DECam's gain in all-four-band coverage and
+about a third of its year-1 completeness gain, while waiting for full Rubin coverage keeps nearly all
+of both. DECam
 therefore lets the Rubin template strategy be chosen for purity and operational
 convenience at small cost in completeness. This is a living document and will be updated as the
 template strategy and the year-1 observing strategy are settled.
@@ -49,8 +50,8 @@ described in {cite:t}`DMTN-362`.
 
 ### Survey simulation and the effective start
 
-The LSST officially began on 2026 June 29. However a major storm kept the telescope off sky from 2026 July 14, and the survey
-resumed on 2026 October 27 after a three-week maintenance period. We take the resumption (2026 October 27, 12:00 UTC night rollover) as the effective survey start $t_0$ in the survey simulation.
+The LSST {cite:p}`Ivezic2019` officially began on 2026 June 29. However a major storm kept the telescope off sky from 2026 July 14, and the survey
+resumed on 2026 October 27 after also accomplishing a three-week planned maintenance period. We take the resumption (2026 October 27, 12:00 UTC night rollover) as the effective survey start $t_0$ in the survey simulation.
 
 The simulated visits after $t_0$ come from the `baseline_v5.3.7_10yrs` simulation in the version frozen on
 2026 October 31 (SHA-256 `eab6b75d…`); simulated visits before $t_0$ are dropped.
@@ -70,14 +71,14 @@ DECam template inputs are taken from the 203,399 DELVE DR3 exposures in $griz$ {
 model the campaign's selection as the best-seeing six exposures per `lsst_cells_v2` patch and band.
 DELVE flags or excludes exposures and CCDs (<https://github.com/delve-survey/exclude_list>) mainly when
 they are contaminated by scattered and reflected light from bright stars, identified with the DES
-ray-tracing procedure {cite:p}`Kent2013`, or when the sky-background estimate failed
+ray-tracing procedure {cite:p}`Kent2020`, or when the sky-background estimate failed
 {cite:p}`DrlicaWagner2022`; the input list keeps them, and removing them changes nothing material.
 
 Template depths follow the effective-exposure-time formalism of {cite:t}`Neilsen2016`, with one offset
 per band inside and outside the DES footprint. In $g$, $r$ and $i$ the offsets match the median
 point-source depths of {cite:t}`Tan2025` (S/N = 10, converted to S/N = 5). No footprint-wide $z$
-median is published for DELVE DR3; we calibrate $z$ at SZ-cluster positions to DES DR2 and Legacy
-Surveys depths. The DECADE depth {cite:p}`Anbajagane2025` suggests our $z$ depths outside DES are about
+median is published for DELVE DR3; we calibrate $z$ at SZ-cluster positions to DES DR2 {cite:p}`DESDR2` and Legacy
+Surveys {cite:p}`Dey2019` depths. The DECADE depth {cite:p}`Anbajagane2025` suggests our $z$ depths outside DES are about
 0.1 mag conservative; we carry ±0.15 mag as the $z$ systematic and ±0.1 mag in $r$. These depths have
 not yet been validated against built DECam templates.
 
@@ -100,7 +101,7 @@ is a parameter (default 1).
 
 ### Readiness and template availability
 
-For each WFD position $p$ (HEALPix $N_{\rm side} = 256$) and band $b$, the readiness time
+For each WFD position $p$ (HEALPix {cite:p}`Gorski2005` $N_{\rm side} = 256$) and band $b$, the readiness time
 $t_{\rm ready}(p, b, N)$ is the time of the $N$-th visit, counting pre-survey visits and simulated
 visits from $t_0$. Two models turn readiness into a template in AP:
 
@@ -350,8 +351,9 @@ Why year-1 transients are missed at alert time ($N = 5$): no template, template 
 The cuts remove most of the pre-survey head start: only 970 deg² of the WFD footprint has five
 qualifying pre-survey visits in all four bands, against 2,734 deg² without cuts. Readiness slows most in
 $g$ and $r$, the bands with the worst seeing. Without DECam, year-1 completeness drops by 0.03–0.10,
-more at longer latency and larger $N$; with DECam it drops by at most 0.03, and DECam's share of
-all-four-band coverage rises by about a third. The cuts do not change the effective latency of the
+more at longer latency and larger $N$; with DECam it drops by at most 0.03, and DECam's own gain grows: on the
+semiannual calendar $G_{\rm visit}$ rises from 0.136 to 0.176 (about 30%) and $G_{\rm visit,4}$ from 0.337
+to 0.372. The cuts do not change the effective latency of the
 semiannual calendar (6.8 months). We applied a stress test that fails whole simulated nights at the per-band
 transparency fail rates of the first survey nights (25% in $g$, 29% in $r$, under 1% in $i$ and $z$;
 three random seeds; failing half-nights instead gives similar results). Those rates come from three nights dominated by one bad
@@ -428,14 +430,15 @@ also gives per-position substitution with the observability-order deployment use
   - 0.324
   - 0.127
   - 0.322
-  - **TBD**
+  - 0.312
 ```
 
 Switching a tract as soon as any Rubin template exists in it removes most of the DECam gain in
-all-four-band coverage and costs 5–8 points of year-1 completeness, because 59% of tract-bands already
+all-four-band coverage and costs 4–6 points of year-1 completeness relative to per-position switching
+on the same schedule (5–8 points relative to the observability-order reference), because 59% of tract-bands already
 hold some Rubin template at the survey start, from DP2 and pre-survey visits. Waiting for full Rubin
 coverage keeps almost all of the per-position result, and the strict version costs only a further 0.2–0.8
-points of completeness and about 1 point of $G_{\rm visit}$. The strict rule leaves visits without any
+points of completeness and about 1 point of $G_{\rm visit}$ and $G_{\rm visit,4}$. The strict rule leaves visits without any
 template only in tract-bands that DECam covers partially: 1,444 tract-bands with 875 deg² of WFD area
 (summed over $griz$) lacking a DECam template, mostly at the $|b| = 10^\circ$ edge of the DECam footprint and
 in coverage holes; note that no WFD tract reaches the Dec +30° edge. With DM's visit cuts the pattern is the same
@@ -490,8 +493,9 @@ $G_{\rm visit,4}$ against the DECam deployment completion date ($N = 5$), for la
 - **Simulation alignment with the delayed start.** The simulation kept observing through the months
   lost to the storm; dropping those visits removes 29% of its first-year WFD $griz$ visits (33% in
   $g$), including template-tier visits the real scheduler would take after resumption. Shifting the
-  whole simulation to start at $t_0$ changes $G_{\rm visit,4}$ on the semiannual calendar from 0.339 to
-  0.276, but misaligns seasons and is not a clean bound. A simulation restarted at $t_0$ from the real
+  whole simulation to start at $t_0$ lowers $G_{\rm visit,4}$ on the semiannual calendar by about 0.06
+  (0.339 to 0.276 in earlier runs that used a DES-first deployment order; our reference value with
+  the observability order is 0.337), but misaligns seasons and is not a clean bound. A simulation restarted at $t_0$ from the real
   visit history would remove this approximation.
 - **Survey realization.** Two versions of the same baseline that share only about 38% of their early
   visits give period-averaged metrics within 0.001–0.01 of each other, but single-date metrics can
@@ -503,7 +507,7 @@ $G_{\rm visit,4}$ against the DECam deployment completion date ($N = 5$), for la
 (sec-provenance)=
 ## Provenance and updates
 
-All numbers come from a private analysis repository at commit `7437883`, using the frozen baseline
+All numbers come from the authors' private analysis repository at commit `7437883`, using the frozen baseline
 above, `calendar.yaml` at `d88188d`, the latency-grid script (`f9aa928`, `7180687`) and the template-QC
 option (`template_qc.yaml`, `7437883`), the campaign chunk schedule (`27255bb`), and the expected campaign schedule and tract switching rules
 (`template_switch.yaml`, `c063b12`, `06dcdd0`). Rerunning the grid for a new simulation, a new DECam deployment schedule or a decided Rubin template strategy takes about 1.5 hours. Each version of this note will record the inputs it used.
@@ -526,6 +530,9 @@ option (`template_qc.yaml`, `7437883`), the campaign chunk schedule (`27255bb`),
 * - 0.4
   - 2026-11-11
   - DMTN-362 and RTN-011 cited; campaign's expected schedule; tract switching rules; DECam false-positive rates in Limitations.
+* - 0.5
+  - 2026-11-14
+  - Proofreading; numbers made consistent with the tables; strict-rule $G_{\rm visit,4}$; bibliography and acknowledgments completed.
 ```
 
 ## Acknowledgments
@@ -534,13 +541,73 @@ The DELVE Survey gratefully acknowledges support from Fermilab LDRD (L2019.011),
 Investigator Program Cycle 9 (No. 91201), the National Science Foundation (AST-2108168, AST-2108169,
 AST-2307126, AST-2407526), and the NSF-Simonyi Scholars program.
 
-<!-- TODO paste exact text from https://noirlab.edu/science/about/scientific-acknowledgments :
-     - Sec. 7.1.3 DECam data from the Astro Data Archive (DECam statement + CTIO statement; DELVE Prop. ID
-       2019A-0305, PI A. Drlica-Wagner; DES Prop. ID 2012B-0001, PI J. Frieman)
-     - Sec. 7.1.4 public archival DES data (DES funding agencies and Collaborating Institutions)
-     - Sec. 7.2 Astro Data Lab (DES tile list queried through Data Lab; cite the Data Lab papers)
-     - Legacy Surveys DR10 acknowledgment (z-band depths used in the calibration)
-     - Rubin Observatory standard acknowledgment -->
+This material is based upon work supported in part by the National Science Foundation through
+Cooperative Agreements AST-1258333 and AST-2241526 and Cooperative Support Agreements AST-1202910 and
+AST-2211468 managed by the Association of Universities for Research in Astronomy (AURA), and the
+Department of Energy under Contract No. DE-AC02-76SF00515 with the SLAC National Accelerator Laboratory
+managed by Stanford University. Additional Rubin Observatory funding comes from private donations,
+grants to universities, and in-kind support from LSST-DA Institutional Members.
+
+This research draws upon DECam data as distributed by the Astro Data Archive at NSF NOIRLab, including
+public archival data from the Dark Energy Survey (DES). NOIRLab is managed by the Association of
+Universities for Research in Astronomy (AURA) under a cooperative agreement with the U.S. National
+Science Foundation.
+
+This project used data obtained with the Dark Energy Camera (DECam), which was constructed by the Dark
+Energy Survey (DES) collaboration. Funding for the DES Projects has been provided by the US Department
+of Energy, the US National Science Foundation, the Ministry of Science and Education of Spain, the
+Science and Technology Facilities Council of the United Kingdom, the Higher Education Funding Council for
+England, the National Center for Supercomputing Applications at the University of Illinois at
+Urbana-Champaign, the Kavli Institute for Cosmological Physics at the University of Chicago, Center for
+Cosmology and Astro-Particle Physics at the Ohio State University, the Mitchell Institute for Fundamental
+Physics and Astronomy at Texas A&M University, Financiadora de Estudos e Projetos, Fundação Carlos Chagas
+Filho de Amparo à Pesquisa do Estado do Rio de Janeiro, Conselho Nacional de Desenvolvimento Científico e
+Tecnológico and the Ministério da Ciência, Tecnologia e Inovação, the Deutsche Forschungsgemeinschaft and
+the Collaborating Institutions in the Dark Energy Survey.
+
+The Collaborating Institutions are Argonne National Laboratory, the University of California at Santa
+Cruz, the University of Cambridge, Centro de Investigaciones Enérgeticas, Medioambientales y
+Tecnológicas–Madrid, the University of Chicago, University College London, the DES-Brazil Consortium, the
+University of Edinburgh, the Eidgenössische Technische Hochschule (ETH) Zürich, Fermi National Accelerator
+Laboratory, the University of Illinois at Urbana-Champaign, the Institut de Ciències de l’Espai
+(IEEC/CSIC), the Institut de Física d’Altes Energies, Lawrence Berkeley National Laboratory, the
+Ludwig-Maximilians Universität München and the associated Excellence Cluster Universe, the University of
+Michigan, NSF NOIRLab, the University of Nottingham, the Ohio State University, the OzDES Membership
+Consortium, the University of Pennsylvania, the University of Portsmouth, SLAC National Accelerator
+Laboratory, Stanford University, the University of Sussex, and Texas A&M University.
+
+Based on observations at NSF Cerro Tololo Inter-American Observatory, a program of NOIRLab (NOIRLab Prop.
+IDs 2019A-0305, PI: A. Drlica-Wagner; and 2012B-0001, PI: J. Frieman), which is managed by the
+Association of Universities for Research in Astronomy (AURA) under a cooperative agreement with the U.S.
+National Science Foundation.
+
+The Legacy Surveys consist of three individual and complementary projects: the Dark Energy Camera Legacy
+Survey (DECaLS; Proposal ID #2014B-0404; PIs: David Schlegel and Arjun Dey), the Beijing-Arizona Sky
+Survey (BASS; NOAO Prop. ID #2015A-0801; PIs: Zhou Xu and Xiaohui Fan), and the Mayall z-band Legacy
+Survey (MzLS; Prop. ID #2016A-0453; PI: Arjun Dey). DECaLS, BASS and MzLS together include data
+obtained, respectively, at the NSF Víctor M. Blanco 4-meter Telescope, Cerro Tololo Inter-American
+Observatory, NSF NOIRLab; the Bok telescope, Steward Observatory, University of Arizona; and the NSF
+Nicholas U. Mayall 4-meter Telescope, Kitt Peak National Observatory, NSF NOIRLab. The Legacy Surveys
+project is honored to be permitted to conduct astronomical research on I'oligam Du’ag (Kitt Peak), a
+mountain with particular significance to the Tohono O’odham Nation. BASS is a key project of the
+Telescope Access Program (TAP), which has been funded by the National Astronomical Observatories of
+China, the Chinese Academy of Sciences (the Strategic Priority Research Program “The Emergence of
+Cosmological Structures” Grant # XDB09000000), and the Special Fund for Astronomy from the Ministry of
+Finance. The BASS is also supported by the External Cooperation Program of Chinese Academy of Sciences
+(Grant # 114A11KYSB20160057), and Chinese National Natural Science Foundation (Grant # 11433005). The
+Legacy Survey team makes use of data products from the Near-Earth Object Wide-field Infrared Survey
+Explorer (NEOWISE), which is a project of the Jet Propulsion Laboratory/California Institute of
+Technology. NEOWISE is funded by the National Aeronautics and Space Administration. The Legacy Surveys
+imaging of the DESI footprint is supported by the Director, Office of Science, Office of High Energy
+Physics of the U.S. Department of Energy under Contract No. DE-AC02-05CH1123, by the National Energy
+Research Scientific Computing Center, a DOE Office of Science User Facility under the same contract; and
+by the U.S. National Science Foundation, Division of Astronomical Sciences under Contract No. AST-0950945
+to NOAO.
+
+This research uses services or data provided by the Astro Data Lab, which is part of the Community
+Science and Data Center (CSDC) Program of NSF NOIRLab {cite:p}`Fitzpatrick2014,Nikutta2020`. NOIRLab is
+operated by the Association of Universities for Research in Astronomy (AURA), Inc. under a cooperative
+agreement with the U.S. National Science Foundation.
 
 Analysis and plotting code were written and run by an AI agent (Claude, Anthropic) under the authors'
 direction, and Claude assisted with drafting; the authors checked the results and are responsible for the
