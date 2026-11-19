@@ -11,13 +11,15 @@ availability at each position by two parameters: the number of visits a template
 $N$ visits to having a template in AP (the latency $L$), and we report alert completeness and
 differenceable-visit fractions over a grid of both. The main result is that DECam templates make
 year-1 alert completeness nearly insensitive to both parameters: across $L = 0$–12 months and
-$N = 4$–10, completeness with DECam stays within 0.71–0.81, whereas without DECam it ranges from 0.75
-down to 0.21. Applying DM's DP2 template-visit selection (a 1.4″ PSF ceiling and a transparency
-cut) lowers Rubin-only completeness by 0.03–0.10 but changes it by at most 0.03 with DECam. The one
+$N = 4$–10, completeness with DECam stays within 0.67–0.81, whereas without DECam it ranges from 0.75
+down to 0.11. Applying DM's DP2 template-visit selection (a 1.4″ PSF ceiling and a transparency
+cut) lowers Rubin-only completeness by 0.01–0.09 but changes it by at most 0.03 with DECam. The one
 practical DM-side choice that matters is when a tract switches from DECam to Rubin templates: switching as soon
 as any Rubin template exists in a tract removes most of DECam's gain in all-four-band coverage and
-about a third of its year-1 completeness gain, while waiting for full Rubin coverage keeps nearly all
-of both. DECam
+about a third of its year-1 completeness gain on a semiannual build calendar, while waiting for full Rubin
+coverage keeps nearly all of both. The campaign's current curation, which withholds DECam templates from
+tract-bands that already hold a DP2 template, costs less than one point of completeness against
+full-coverage switching. DECam
 therefore lets the Rubin template strategy be chosen for purity and operational
 convenience at small cost in completeness. This is a living document and will be updated as the
 template strategy and the year-1 observing strategy are settled.
@@ -64,7 +66,9 @@ weeks of the LSST. Since these visits were taken during commissioning and early 
 heavily weighted to $i$ and $z$: at least five visits reach 14,400 deg² of the WFD footprint in $i$ and
 12,012 deg² in $z$, but only 3,538 deg² in $g$ and 2,734 deg² in all four of $griz$.
 
-DP2 templates are in AP at $t_0$ where DP2 built them.
+At $t_0$ the only Rubin templates in AP are the DP2 templates, at the depth of their own input visits
+(data up to 2026 January 1). The other pre-survey visits count toward readiness and template depth, but
+reach AP templates only after $t_0$ (see {ref}`sec-availability`).
 
 ### DECam templates
 
@@ -74,7 +78,8 @@ model the campaign's selection as the best-seeing six exposures per `lsst_cells_
 DELVE flags or excludes exposures and CCDs (<https://github.com/delve-survey/exclude_list>) mainly when
 they are contaminated by scattered and reflected light from bright stars, identified with the DES
 ray-tracing procedure {cite:p}`Kent2020`, or when the sky-background estimate failed
-{cite:p}`DrlicaWagner2022`; the input list keeps them, and removing them changes nothing material.
+{cite:p}`DrlicaWagner2022`. The campaign applies this exclude list {cite:p}`DMTN-362`; our model keeps
+those exposures, which changes nothing material.
 
 Template depths follow the effective-exposure-time formalism of {cite:t}`Neilsen2016`, with one offset
 per band inside and outside the DES footprint. In $g$, $r$ and $i$ the offsets match the median
@@ -86,12 +91,16 @@ not yet been validated against built DECam templates.
 
 **Deployment.** The campaign processes and deploys DECam templates in 30° × 30° regions of sky
 ("chunks"), in full-declination columns (Dec +30° to −90°) advancing in RA from the
-RA 300°–330° column {cite:p}`DMTN-362`. Chunk 0 (RA 300°–330°, Dec 0° to +30°) was deployed at USDF on 2026 November 10.
-The campaign expects about a week for the rest of that column and then about 10 days per full column going forward, which
-would complete the footprint on about 2027 March 7. Unless stated otherwise, the results below model
+RA 300°–330° column {cite:p}`DMTN-362`. Chunk 0 (RA 300°–330°, Dec 0° to +30°; about 500 deg² after the
+campaign's cuts) was vetted at USDF in early November; as of 2026 November 19 it had been curated but not yet
+configured for use in AP {cite:p}`DMTN-362`. The campaign's expected schedule, which we model from chunk 0 on
+2026 November 10, allows about a week for the rest of that column and then about 10 days per full column, which
+would complete the footprint on about 2027 March 7. The campaign's timing is set by the LIGO–Virgo–KAGRA
+Intermediate Run 1 (IR1), now expected to begin in mid-January 2027 {cite:p}`DMTN-362`; the expected schedule
+completes the footprint about seven weeks into the run. Unless stated otherwise, the results below model
 the deployment as staged in observability order from 2026 November 15 to 2027 January 1. With the same
-completion date, the campaign's chunk order changes year-1 completeness by at most 0.006 and
-$G_{\rm visit}$ by 0.001; the campaign's expected schedule, finishing two months later, costs 1–2 points
+completion date, the campaign's chunk order changes year-1 completeness by at most 0.005 and
+$G_{\rm visit}$ by 0.001; the campaign's expected schedule, finishing two months later, costs 1–2.5 points
 of year-1 completeness (see {ref}`sec-switching`). When the footprint is complete matters; the
 order does not. For comparison, deploying the whole DECam footprint at $t_0$
 would raise year-1 completeness with DECam on the semiannual calendar from 0.763 to 0.800. DECam templates are used band by band wherever no
@@ -101,24 +110,34 @@ is a parameter (default 1).
 
 ## Method
 
+(sec-availability)=
 ### Readiness and template availability
 
 For each WFD position $p$ (HEALPix {cite:p}`Gorski2005` $N_{\rm side} = 256$) and band $b$, the readiness time
 $t_{\rm ready}(p, b, N)$ is the time of the $N$-th visit, counting pre-survey visits and simulated
 visits from $t_0$. Two models turn readiness into a template in AP:
 
-- **Model A, continuous incremental builds.** A template enters AP at $t_{\rm ready} + L$. At time $t$
-  the template is the coadd of all visits up to $t - L$, so it keeps deepening.
-- **Model B, periodic builds.** Data cutoffs every $P$ months from $t_0$, each deployed $D$ months
-  later. A position gets a template at the first deployment whose cutoff follows its readiness; the
-  template is the coadd up to that cutoff. This model's effective latency is about $P/2 + D$.
+- **Model A, continuous incremental builds.** A template enters AP at $\max(t_{\rm ready}, t_0) + L$:
+  positions already ready from pre-survey visits wait until $t_0 + L$, because apart from DP2 no
+  templates had been built from those visits at $t_0$. At time $t$ the template is the coadd of all
+  visits up to $t - L$, so it keeps deepening.
+- **Model B, periodic builds.** Data cutoffs at $t_0$ and every $P$ months after, each deployed $D$
+  months later. A position gets a template at the first deployment whose cutoff follows its readiness;
+  the template is the coadd up to that cutoff. Positions ready at $t_0$ get their template at $t_0 + D$;
+  for positions that become ready during the survey the latency averages about $P/2 + D$.
 
-Placed at their effective latency, Model B points fall on the Model A curves for the differenceable
-fractions, so we present results against $L$ and mark Model B points on the same axis.
-For alert completeness without DECam, periodic builds sit up to about 0.05 below continuous builds at
-the same effective latency, because their templates stay frozen, and so shallower, between builds. As a
-reference case throughout we use the **semiannual calendar** (data cutoffs every six months, each deployed
-three months later), which behaves like $L \approx 6$–7 months.
+In both models DP2 templates are used from $t_0$ wherever DP2 built them, until the model's own template
+for that position, built from the same visits plus later ones and so deeper, reaches AP.
+
+We present results against $L$ and mark each Model B case at its effective latency: the Model A latency
+that gives the same $G_{\rm visit}$. Because Model B's first build, at $t_0$, delivers the pre-survey head
+start after only $D$ months, its effective latency is shorter than $P/2 + D$. Placed this way, Model B
+points lie on the Model A curves for the differenceable fractions, but for Rubin-only completeness they
+can sit well above them (by up to 0.14 for annual builds deployed three months after their cutoff), so
+for completeness the mapping is only approximate. As a reference case throughout we use the
+**semiannual calendar**: a first build from data up to $t_0$, deployed on 2027 January 1, then semiannual
+builds, each deployed about three months after its cutoff. Its effective latency is 4.2 months
+(5.9 months if matched on $G_{\rm visit,4}$).
 
 ### Template visit selection
 
@@ -132,7 +151,8 @@ from the selected visits. Pre-survey visits use their measured PSF size and zero
 visits the PSF cut uses `seeingFwhmGeom` (closest to DM's PSF-based FWHM), and the transparency term
 reflects airmass only, because the simulation applies no partial-cloud extinction. The simulated pass rates
 (0.93 in $griz$ in year 1, against 0.72 for the pre-survey visits) are therefore an upper limit. The
-first survey nights failed the transparency cut at 8% in $griz$, almost all in one half-night; we use
+first three survey nights after $t_0$ (dayobs 20261027, 20261029 and 20261030) failed the transparency cut
+at 8% in $griz$, almost all in one half-night; we use
 those rates only for a stress test. Whether incremental AP templates will use this selection is not
 yet decided.
 
@@ -194,14 +214,70 @@ are given where noted.
 ```
 
 At $N = 5$, $g$ (median 5.1 months) and $u$ (7.1 months) are the slow bands; $i$ and $z$ are mostly
-ready before $t_0$ from pre-survey visits. Across five years, 2.3% of WFD $griz$ visits are taken
+ready before $t_0$ from pre-survey visits (ready, but apart from DP2 not yet built into templates at $t_0$;
+see {ref}`sec-availability`). Across five years, 2.3% of WFD $griz$ visits are taken
 before their position is ready at $N = 5$, rising to 17.6% in $u$, for which DECam provides no
 templates.
 
 ```{figure} figures/fig_floor_readiness.png
 :name: fig-readiness
 
-Readiness for $N = 4$, 5, 6 and 10, counting pre-survey and simulated visits. Top: months after the survey start until every one of $griz$ has its $N$-th visit, per WFD position (grey: ready at the start; red: not within 24 months). Bottom: cumulative fraction of the WFD footprint ready against time, per band and for all of $griz$ (dashed).
+Readiness for $N = 4$, 5, 6 and 10, counting pre-survey and simulated visits. Top: months after $t_0$ (2026 October 27) until every one of $griz$ has its $N$-th visit, per WFD position (grey: ready at $t_0$; red: not within 24 months). Bottom: cumulative fraction of the WFD footprint ready against time, per band and for all of $griz$ (dashed). Maps use a Mollweide projection centred on RA 180°, with RA increasing to the left.
+```
+
+{numref}`fig-readiness-decam` shows the same quantities with DECam templates included: the time until a
+template is in AP in every one of $griz$, with Rubin templates at $L = 0$ (DP2 at $t_0$, others at
+readiness but no earlier than $t_0$) and DECam templates on the campaign's expected schedule with its
+curation as implemented ({ref}`sec-switching`). With DECam, 71% of the WFD footprint has templates in
+all four bands by +3 months at $N = 5$, against 26% from Rubin alone, and the median wait falls from
+5.4 to 2.0 months. On the expected IR1 start (2027 January 15), 7,666 deg² of the WFD footprint still
+lacks templates in all of $griz$ at $N = 5$, against 15,375 deg² with Rubin templates only; by the
+campaign's expected completion (2027 March 7) this falls to 1,479 deg², against 12,378 deg². Where a
+full-coverage switch withdraws DECam before a position's own Rubin template arrives (2.0–5.7% of WFD
+positions for $N = 4$–10), the map shows the time from which a template is continuously available.
+
+```{list-table} Template availability in all four of griz with DECam, WFD footprint (Rubin-only readiness from the table above in brackets)
+:header-rows: 1
+
+* - N
+  - At t0
+  - By +3 mo
+  - By +6 mo
+  - By +12 mo
+  - Median wait (months)
+* - 4
+  - 20.5% (18.6%)
+  - 74.9% (36.9%)
+  - 96.4% (63.8%)
+  - 99.4% (89.7%)
+  - 1.8 (4.2)
+* - 5
+  - 16.7% (13.7%)
+  - 70.7% (26.3%)
+  - 94.6% (52.3%)
+  - 98.7% (80.6%)
+  - 2.0 (5.4)
+* - 6
+  - 14.7% (10.7%)
+  - 67.5% (18.5%)
+  - 92.6% (40.6%)
+  - 97.7% (68.4%)
+  - 2.3 (6.6)
+* - 10
+  - 12.2% (3.2%)
+  - 62.0% (4.1%)
+  - 84.3% (6.9%)
+  - 92.9% (24.3%)
+  - 2.5 (17.6)
+```
+
+The values with DECam at $t_0$ include DP2 templates at positions that are not yet ready, which the
+Rubin-only readiness does not.
+
+```{figure} figures/fig_floor_readiness_decam.png
+:name: fig-readiness-decam
+
+As {numref}`fig-readiness`, with DECam templates. Top: months after $t_0$ (2026 October 27) until a template is in AP in every one of $griz$, from Rubin ($L = 0$; DP2 at $t_0$) or DECam (campaign's expected schedule, $N_{\min} = 1$; no DECam in tract-bands holding a DP2 template, full-Rubin-coverage switching elsewhere); grey: in AP at $t_0$; red: not within 24 months. Bottom: cumulative fraction of the WFD footprint with a template, per band and for all of $griz$ (black dashed), with the Rubin-only readiness for all of $griz$ from {numref}`fig-readiness` (grey dashed); vertical lines mark the expected IR1 start (2027 January 15) and the expected DECam completion (2027 March 7). RA increases to the left.
 ```
 
 ### DECam value against latency
@@ -216,28 +292,30 @@ Readiness for $N = 4$, 5, 6 and 10, counting pre-survey and simulated visits. To
   - 0.040
   - 0.177
 * - 1 month
-  - 0.067
+  - 0.068
   - 0.232
 * - 3 months
-  - 0.105
-  - 0.304
+  - 0.114
+  - 0.305
 * - 6 months
-  - 0.127
-  - 0.335
+  - 0.168
+  - 0.338
 * - 12 months
-  - 0.266
-  - 0.517
-* - Semiannual calendar (L ≈ 6–7 mo)
+  - 0.335
+  - 0.522
+* - Semiannual calendar (effective L ≈ 4.2 mo)
   - 0.136
   - 0.337
 ```
 
-As {numref}`fig-lat-gain` shows, even with zero latency DECam adds 0.18 to the all-four-band fraction: this is set by the survey speed and strategy, not by DM. The gain then grows with latency.
+As {numref}`fig-lat-gain` shows, even with zero latency DECam adds 0.18 to the all-four-band fraction: this is set by the survey speed and strategy, not by DM. The gain then grows with latency. Single-band $G_{\rm visit}$ grows fastest at long latency,
+because the pre-survey head start, mostly in $i$ and $z$, reaches AP only at $t_0 + L$; few positions
+were ready in all four bands at $t_0$, so this matters much less for $G_{\rm visit,4}$.
 
 ```{figure} figures/fig_lat_gain.png
 :name: fig-lat-gain
 
-Gain from DECam templates in differenceable visits over years 1–2, $G_{\rm visit}$ (left) and $G_{\rm visit,4}$ (right), against Rubin template latency $L$ (Model A) for $N = 4$, 5 and 6. Model B points are placed at their effective latency; the star marks the semiannual calendar.
+Gain from DECam templates in differenceable visits over years 1–2, $G_{\rm visit}$ (left) and $G_{\rm visit,4}$ (right), against Rubin template latency $L$ (Model A) for $N = 4$, 5 and 6. Model B points are placed at their effective latency (the Model A latency with the same $G_{\rm visit}$); the star marks the semiannual calendar.
 ```
 
 ### Alert completeness against latency and N
@@ -252,15 +330,16 @@ Gain from DECam templates in differenceable visits over years 1–2, $G_{\rm vis
   - 0.75 / 0.71 / 0.68 / 0.53
   - 0.81 / 0.80 / 0.80 / 0.77
 * - 3 months
-  - 0.68 / 0.63 / 0.57 / 0.38
-  - 0.81 / 0.79 / 0.78 / 0.75
+  - 0.62 / 0.58 / 0.54 / 0.37
+  - 0.78 / 0.77 / 0.77 / 0.74
 * - 12 months
-  - 0.43 / 0.37 / 0.32 / 0.21
-  - 0.74 / 0.73 / 0.72 / 0.71
+  - 0.14 / 0.14 / 0.13 / 0.11
+  - 0.67 / 0.67 / 0.68 / 0.69
 ```
 
-Without DECam, completeness falls steeply with both latency and $N$. With DECam the surface is nearly
-flat: moving from $N = 4$ to $N = 6$ costs 7 points at $L = 0$ without DECam and about 1 point with it.
+Without DECam, completeness falls steeply with both latency and $N$; at $L = 12$ months no Rubin template
+other than DP2's reaches AP in year 1, and Rubin-only completeness falls to 0.11–0.14. With DECam the
+surface is nearly flat: moving from $N = 4$ to $N = 6$ costs 7 points at $L = 0$ without DECam and about 1 point with it.
 These numbers describe completeness for real transients only; the reasons to prefer a larger $N$
 (artifact rejection, PSF homogeneity, purity) are not modelled here (see {ref}`sec-limitations`). The
 result is best read as the completeness cost of each choice of $N$ and $L$, which DECam keeps small.
@@ -268,7 +347,7 @@ result is best read as the completeness cost of each choice of $N$ and $L$, whic
 ```{figure} figures/fig_lat_completeness.png
 :name: fig-lat-completeness
 
-Year-1 alert completeness (flat mean over the transient grid) against latency $L$ (Model A), Rubin templates only (left) and Rubin plus DECam (right), for $N = 4$, 5, 6 and 10. Model B points are placed at their effective latency; the star marks the semiannual calendar ($N = 5$).
+Year-1 alert completeness (flat mean over the transient grid) against latency $L$ (Model A), Rubin templates only (left) and Rubin plus DECam (right), for $N = 4$, 5, 6 and 10. Model B points are placed at their effective latency from {numref}`fig-lat-gain`; the star marks the semiannual calendar ($N = 5$).
 ```
 
 ```{figure} figures/fig_lat_completeness_vs_N.png
@@ -289,24 +368,25 @@ Year-1 alert completeness against the number of visits per Rubin template, $N$, 
   - 0.029 / 0.083 / 0.039
   - 0.012 / 0.046 / 0.022
 * - L = 1 month
-  - 0.049 / 0.112 / 0.011
-  - 0.016 / 0.056 / 0.003
+  - 0.062 / 0.111 / 0.013
+  - 0.025 / 0.057 / 0.003
 * - L = 3 months
-  - 0.076 / 0.146 / 0.003
-  - 0.018 / 0.066 / 0.000
+  - 0.133 / 0.146 / 0.006
+  - 0.031 / 0.072 / 0.001
 * - L = 6 months
-  - 0.112 / 0.158 / 0.002
-  - 0.025 / 0.073 / 0.000
+  - 0.299 / 0.153 / 0.003
+  - 0.045 / 0.083 / 0.000
 * - L = 12 months
-  - 0.318 / 0.191 / 0.000
-  - 0.044 / 0.091 / 0.000
+  - 0.691 / 0.118 / 0.000
+  - 0.089 / 0.094 / 0.000
 * - Semiannual calendar
   - 0.138 / 0.159 / 0.001
   - 0.029 / 0.075 / 0.000
 ```
 
-For latencies up to about six months, templates that exist but are too shallow cost more than missing
-templates. Self-contamination matters only for latencies of a month or less, so instantaneous builds
+Without DECam, templates that exist but are too shallow cost more than missing ones only up to about
+three months; at longer latencies missing templates dominate. With DECam, shallow templates are the
+larger loss at every latency. Self-contamination matters only for latencies of a month or less, so instantaneous builds
 are not free for slow transients.
 
 ```{figure} figures/fig_lat_miss_reasons.png
@@ -341,34 +421,35 @@ Why year-1 transients are missed at alert time ($N = 5$): no template, template 
   - 0.213 / 0.372
   - 0.321 / 0.470
 * - Completeness, Rubin only: L = 0 / 3 mo / calendar
-  - 0.714 / 0.625 / 0.547
-  - 0.677 / 0.549 / 0.464
-  - 0.651 / 0.531 / 0.455
+  - 0.714 / 0.577 / 0.547
+  - 0.677 / 0.512 / 0.464
+  - 0.651 / 0.494 / 0.455
 * - Completeness, Rubin + DECam: L = 0 / 3 mo / calendar
-  - 0.803 / 0.793 / 0.763
-  - 0.792 / 0.772 / 0.741
-  - 0.790 / 0.766 / 0.740
+  - 0.803 / 0.774 / 0.763
+  - 0.792 / 0.759 / 0.741
+  - 0.790 / 0.753 / 0.740
 ```
 
 The cuts remove most of the pre-survey head start: only 970 deg² of the WFD footprint has five
 qualifying pre-survey visits in all four bands, against 2,734 deg² without cuts. Readiness slows most in
-$g$ and $r$, the bands with the worst seeing. Without DECam, year-1 completeness drops by 0.03–0.10,
-more at longer latency and larger $N$; with DECam it drops by at most 0.03, and DECam's own gain grows: on the
+$g$ and $r$, the bands with the worst seeing. Without DECam, year-1 completeness drops by 0.01–0.09
+across the grid (0.04–0.08 in the table); with DECam it drops by at most 0.03, and DECam's own gain grows: on the
 semiannual calendar $G_{\rm visit}$ rises from 0.136 to 0.176 (about 30%) and $G_{\rm visit,4}$ from 0.337
-to 0.372. The cuts do not change the effective latency of the
-semiannual calendar (6.8 months). We applied a stress test that fails whole simulated nights at the per-band
-transparency fail rates of the first survey nights (25% in $g$, 29% in $r$, under 1% in $i$ and $z$;
+to 0.372. With the cuts, the semiannual calendar's effective
+latency is 4.7 months, against 4.2 without. We applied a stress test that fails whole simulated nights at the per-band
+transparency fail rates of those first three nights after $t_0$ (25% in $g$, 29% in $r$, under 1% in $i$ and $z$;
 three random seeds; failing half-nights instead gives similar results). Those rates come from three nights dominated by one bad
 half-night, so the column is an upper bound on weather losses, not an estimate. It mainly moves
-$G_{\rm visit,4}$; completeness changes by at most 0.03 without DECam and 0.006 with it.
+$G_{\rm visit,4}$; completeness changes by about 0.03 at most without DECam and by less than 0.01 with it.
 
 (sec-switching)=
 ### Switching tracts from DECam to Rubin templates
 
 The campaign uses one template style per tract and band, never mixing Rubin and DECam templates within a
-tract {cite:p}`DMTN-362`. The switch is made per tract, but the condition that triggers it is not yet
-fixed, and it turns out to be the DM-side choice that matters most. We compare four rules, all with the campaign's expected
-deployment schedule (chunk 0 on 2026 November 10, complete about 2027 March 7). For reference, the table
+tract {cite:p}`DMTN-362`. In curating chunk 0 the campaign withheld DECam templates from tract-bands
+that already hold a DP2 template {cite:p}`DMTN-362`. When other tract-bands switch to Rubin templates is
+not yet fixed, and it turns out to be the DM-side choice that matters most. We compare five rules, all with
+the campaign's expected deployment schedule (chunk 0 from 2026 November 10, complete about 2027 March 7). For reference, the table
 also gives per-position substitution with the observability-order deployment used elsewhere. The rules are:
 
 - **per position:** each position uses its own Rubin template where one exists and DECam otherwise
@@ -379,7 +460,10 @@ also gives per-position substitution with the observability-order deployment use
   positions, then switches entirely to Rubin; before the switch, positions without a DECam template use
   their Rubin template if they have one;
 - **full Rubin coverage, strict:** as above, but before the switch a tract-band with any DECam coverage
-  uses DECam only, never Rubin (tract-bands with no DECam coverage stay Rubin per position).
+  uses DECam only, never Rubin (tract-bands with no DECam coverage stay Rubin per position);
+- **campaign as implemented:** tract-bands that hold a DP2 template (any DP2 `template_coadd` in that
+  tract and band) use Rubin templates only from $t_0$, DP2's and then the model's own; all other
+  tract-bands follow the full-Rubin-coverage rule.
 
 ```{list-table} Effect of the switching rule (N = 5, no visit cuts; year-1 completeness with DECam)
 :header-rows: 1
@@ -391,6 +475,7 @@ also gives per-position substitution with the observability-order deployment use
   - Campaign schedule, any Rubin template
   - Campaign schedule, full Rubin coverage
   - Campaign schedule, full Rubin coverage, strict
+  - Campaign schedule, as implemented
 * - Completeness, L = 0
   - 0.714
   - 0.803
@@ -398,26 +483,30 @@ also gives per-position substitution with the observability-order deployment use
   - 0.753
   - 0.793
   - 0.786
+  - 0.791
 * - Completeness, L = 3 mo
-  - 0.625
-  - 0.794
-  - 0.778
-  - 0.724
-  - 0.775
-  - 0.767
-* - Completeness, L = 12 mo
-  - 0.373
-  - 0.729
-  - 0.706
-  - 0.664
-  - 0.704
+  - 0.577
+  - 0.774
+  - 0.750
   - 0.701
+  - 0.747
+  - 0.746
+  - 0.745
+* - Completeness, L = 12 mo
+  - 0.139
+  - 0.673
+  - 0.648
+  - 0.640
+  - 0.648
+  - 0.647
+  - 0.641
 * - Completeness, semiannual calendar
   - 0.547
   - 0.763
   - 0.742
   - 0.680
   - 0.738
+  - 0.736
   - 0.736
 * - G_visit, semiannual calendar
   - –
@@ -426,6 +515,7 @@ also gives per-position substitution with the observability-order deployment use
   - 0.072
   - 0.125
   - 0.119
+  - 0.122
 * - G_visit,4, semiannual calendar
   - –
   - 0.337
@@ -433,18 +523,29 @@ also gives per-position substitution with the observability-order deployment use
   - 0.127
   - 0.322
   - 0.312
+  - 0.312
 ```
 
 Switching a tract as soon as any Rubin template exists in it removes most of the DECam gain in
-all-four-band coverage and costs 4–6 points of year-1 completeness relative to per-position switching
-on the same schedule (5–8 points relative to the observability-order reference), because 59% of tract-bands already
-hold some Rubin template at the survey start, from DP2 and pre-survey visits. Waiting for full Rubin
-coverage keeps almost all of the per-position result, and the strict version costs only a further 0.2–0.8
+all-four-band coverage (61% of it on the semiannual calendar) and costs 1–6 points of year-1 completeness
+relative to per-position switching on the same schedule (3–8 points relative to the observability-order
+reference). For any $L > 0$, only the 15% of tract-bands that hold DP2 templates have switched at $t_0$;
+the loss comes later, as each Rubin template that appears withdraws DECam from its whole tract-band long
+before Rubin covers it. At $L = 12$ months the cost is small (0.8 points), because almost no Rubin
+templates appear in year 1. Waiting for full Rubin
+coverage keeps almost all of the per-position result, and the strict version costs only a further 0.1–0.7
 points of completeness and about 1 point of $G_{\rm visit}$ and $G_{\rm visit,4}$. The strict rule leaves visits without any
-template only in tract-bands that DECam covers partially: 1,444 tract-bands with 875 deg² of WFD area
+template only in tract-bands that DECam covers partially: 1,444 tract-bands with 874 deg² of WFD area
 (summed over $griz$) lacking a DECam template, mostly at the $|b| = 10^\circ$ edge of the DECam footprint and
-in coverage holes; note that no WFD tract reaches the Dec +30° edge. With DM's visit cuts the pattern is the same
-(semiannual calendar: 0.464 Rubin only, 0.719 per position, 0.656 any, 0.715 full, 0.712 strict).
+in coverage holes; note that no WFD tract reaches the Dec +30° edge.
+
+The campaign's curation as implemented costs 0.2–0.7 points against the full-coverage rule, because DP2
+already covers 87% of the WFD area in the tract-bands that hold its templates. The rest, 1,675 deg² summed
+over $griz$ (1,315 deg² of it where a DECam template would otherwise be available), has no template at
+$t_0$. It shrinks to 900 deg² by +3 months, both on the semiannual calendar and at $L = 3$ months, as
+positions ready from pre-survey visits receive their first Rubin templates, and to 274–380 deg² by
++12 months. With DM's visit cuts the pattern is the same (semiannual calendar: 0.464 Rubin only,
+0.719 per position, 0.656 any, 0.715 full, 0.712 strict, 0.711 as implemented).
 
 ### DECam acceptance and deployment date
 
@@ -460,9 +561,9 @@ in coverage holes; note that no WFD tract reaches the Dec +30° edge. With DM's 
   - 0.801
   - 0.776
 * - L = 3 months
-  - 0.793
-  - 0.788
-  - 0.740
+  - 0.774
+  - 0.768
+  - 0.715
 * - Semiannual calendar
   - 0.763
   - 0.755
@@ -485,14 +586,19 @@ $G_{\rm visit,4}$ against the DECam deployment completion date ($N = 5$), for la
 - **Purity is not modelled.** We count only real transients. Fewer template inputs, PSF variations
   between inputs and discontinuities at patch boundaries all raise the rate of spurious
   difference-image sources. These are the main reasons to choose a larger $N$, stricter visit cuts or a
-  non-zero latency, and they are outside this note. DECam templates add their own: in an early COSMOS
+  non-zero latency, and they are outside this note. DECam templates add their own. In an early COSMOS
   test, Rubin–DECam differencing produced about 20 times as many unfiltered diaSources as Rubin–Rubin
-  differencing and about 4 times as many after quality and reliability cuts, from proper motion between
-  epochs, poorer template seeing, bandpass differences and underestimated difference-image variance
-  {cite:p}`DMTN-362`. Completeness gains from DECam therefore come with a higher false-positive rate.
+  differencing and about 4 times as many after quality and reliability cuts. The excess was spatially
+  clustered and was traced to noise correlated by warping between the two pixel scales; accounting for
+  it greatly reduced the excess, and difference images from the ELAIS-S1 pilot templates were judged
+  satisfactory {cite:p}`DMTN-362`. No false-positive rate after that correction has been published yet.
+  Some extra detections are real but unwanted: stars with proper motion over the roughly ten-year
+  baseline leave dipoles, sources with extreme colours leave residuals from bandpass differences, and
+  slowly varying sources such as AGN are detected more often {cite:p}`DMTN-362`. Completeness gains
+  from DECam may therefore come with a higher alert rate.
 - **DECam depths are modelled, not measured.** Measured depths of the first campaign templates will
   test the depth model directly.
-- **Simulation alignment with the delayed start.** The simulation kept observing through the months
+- **Simulation alignment with $t_0$.** The simulation kept observing through the months
   lost to the storm; dropping those visits removes 29% of its first-year WFD $griz$ visits (33% in
   $g$), including template-tier visits the real scheduler would take after resumption. Shifting the
   whole simulation to start at $t_0$ lowers $G_{\rm visit,4}$ on the semiannual calendar by about 0.06
@@ -509,10 +615,12 @@ $G_{\rm visit,4}$ against the DECam deployment completion date ($N = 5$), for la
 (sec-provenance)=
 ## Provenance and updates
 
-All numbers come from the authors' private analysis repository at commit `7437883`, using the frozen baseline
-above, `calendar.yaml` at `d88188d`, the latency-grid script (`f9aa928`, `7180687`) and the template-QC
-option (`template_qc.yaml`, `7437883`), the campaign chunk schedule (`27255bb`), and the expected campaign schedule and tract switching rules
-(`template_switch.yaml`, `c063b12`, `06dcdd0`). Rerunning the grid for a new simulation, a new DECam deployment schedule or a decided Rubin template strategy takes about 1.5 hours. Each version of this note will record the inputs it used.
+All numbers come from the authors' private analysis repository at commit `2985ed7`; the figures were
+regenerated at `a357a50` with identical numbers. The inputs, by
+SHA-256 prefix, are the frozen baseline above (`eab6b75d…`), `calendar.yaml` (`01737063…`, which also
+holds the campaign chunk schedule), `template_qc.yaml` (`cd2c3090…`), `template_switch.yaml`
+(`07a1a60d…`, the expected campaign schedule and tract switching rules) and the DP2 tract-band list
+(`2222a41c…`, from the DP2 `template_coadd` datasets, queried 2026 November 19). Rerunning the grid for a new simulation, a new DECam deployment schedule or a decided Rubin template strategy takes about 1.5 hours. Each version of this note will record the inputs it used.
 
 ```{list-table} Version history
 :header-rows: 1
@@ -535,6 +643,9 @@ option (`template_qc.yaml`, `7437883`), the campaign chunk schedule (`27255bb`),
 * - 0.5
   - 2026-11-14
   - Proofreading; numbers made consistent with the tables; strict-rule $G_{\rm visit,4}$; bibliography and acknowledgments completed.
+* - 0.6
+  - 2026-11-19
+  - Rubin templates other than DP2's reach AP no earlier than $t_0$ (Model A, $t_0 + L$); Model B effective latency redefined; campaign's DP2 curation added as a switching rule, with its template holes; template availability with DECam (new figure and table); DMTN-362 revision 2: chunk 0 status, exclude list, IR1 timing, causes of the COSMOS false-positive excess.
 ```
 
 ## Acknowledgments
