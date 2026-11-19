@@ -24,8 +24,10 @@ template strategy and the year-1 observing strategy are settled.
 ```
 
 :::{note}
-**Draft, not for circulation.** Numbers are provisional and come from the runs listed in
-{ref}`sec-provenance`. RTN-133 (<https://rtn-133.lsst.io>). Authors: Brian Stalder, Sean Patrick MacBride.
+**Draft for review.** Numbers are provisional and will change as the Rubin template strategy, the
+year-1 observing strategy and the DECam deployment schedule are settled (see {ref}`sec-provenance`).
+Comments are welcome in the DECam templates Slack channel or as issues on
+[lsst/rtn-133](https://github.com/lsst/rtn-133/issues).
 :::
 
 ## Purpose and scope
