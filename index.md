@@ -222,7 +222,7 @@ templates.
 ```{figure} figures/fig_floor_readiness.png
 :name: fig-readiness
 
-Readiness for $N = 4$, 5, 6 and 10, counting pre-survey and simulated visits. Top: months after $t_0$ (2026 October 27) until every one of $griz$ has its $N$-th visit, per WFD position (grey: ready at $t_0$; red: not within 24 months). Bottom: cumulative fraction of the WFD footprint ready against time, per band and for all of $griz$ (dashed). Maps use a Mollweide projection centred on RA 180°, with RA increasing to the left.
+Readiness for $N = 4$, 5, 6 and 10, counting pre-survey and simulated visits. Top: months after $t_0$ (2026 October 27) until every one of $griz$ has its $N$-th visit, per WFD position (grey: ready at $t_0$; red: not within 24 months). Bottom: cumulative fraction of the WFD footprint ready against time, per band and for all of $griz$ (dashed). Maps use a Mollweide projection centred on RA 0°, with RA increasing to the left.
 ```
 
 {numref}`fig-readiness-decam` shows the same quantities with DECam templates included: the time until a
